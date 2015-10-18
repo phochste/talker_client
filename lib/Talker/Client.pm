@@ -9,6 +9,7 @@ use POSIX;
 use Carp;
 use Log::Any ();
 
+has name           => (is => 'ro', required => 1);
 has host           => (is => 'ro', required => 1);
 has port           => (is => 'ro', required => 1);
 has user           => (is => 'ro', required => 1);
@@ -16,7 +17,7 @@ has password       => (is => 'ro', required => 1);
 has name_regex     => (is => 'ro', required => 1);
 has password_regex => (is => 'ro', required => 1);
 
-has state    => (is => 'rw');
+has state    => (is => 'lazy');
 has socket   => (is => 'lazy');
 has 'log'    => (is => 'lazy');
  
@@ -46,6 +47,29 @@ sub _build_socket {
     fcntl($socket, F_SETFL(), O_NONBLOCK());
 
     $socket;
+}
+
+sub _build_state {
+    my ($self) = @_;
+    my $name = $self->name;
+    my $state;
+
+    eval {
+        my $pkg = "Talker::State::$name";
+        load $pkg;
+        $self->log->info("$pkg");
+        $state = $pkg->new(talker => $self);
+    };
+
+    if ($@) {
+        $self->log->error($@);
+        my $pkg = "Talker::State::default";
+        load $pkg;
+        $self->log->info("$pkg");
+        $state = $pkg->new(talker => $self);
+    }
+
+    $state;
 }
 
 sub login {
@@ -89,7 +113,7 @@ sub logout {
 # ReadUntilFunctionTrue returns a reference to an array :
 #
 #       array[0] = data on which the function reacted
-#               array[1] = return value of the function
+#       array[1] = return value of the function
 #
 sub read_while {
     my  ($self,$func,$timeout) = @_;
@@ -97,20 +121,18 @@ sub read_while {
     croak "read_while needs subroutine" unless $func;
 
     my $read_handles  = new IO::Select($self->socket);
-    my $write_handles = new IO::Select($self->socket);
 
     my $buf = '';
     my $ret;
 
     $self->log->debug("entering read_while loop");
 
-
     while (1) {
         my $now          = [Time::HiRes::gettimeofday];
         my ($read_ready) = $read_handles->can_read($timeout);
         my $elapsed      = Time::HiRes::tv_interval($now);
 
-        unless (defined($read_ready) && defined($timeout)) {
+        unless (defined($read_ready)) {
             $timeout //= '0';
             $self->log->debug("timeout reached");
             return undef;
@@ -130,8 +152,17 @@ sub read_while {
             }
 
             if ($bytes_read > 0) {
+                $buf = &clean_buffer($buf);
+
+                next unless (length($buf) && $buf =~ /\S/);
+                
                 $self->log->debug("read " . length($buf) . " bytes : $buf");
-                if (($ret = $func->($buf)) > 0) { return [$buf,$ret]; }
+
+                for my $line (split(/\n/,$buf)) {
+                    if (($ret = $func->($line,$buf)) > 0) { 
+                        return [$line,$ret]; 
+                    }
+                }
             }
         }
     }
@@ -170,7 +201,7 @@ sub write_string {
         foreach $sock (@$write_ready) {
             $self->log->info("write " . length($string) . " bytes : $string");
             syswrite($self->socket,$string,length($string));
-            return ;
+            return;
         }
     }
 }
@@ -188,15 +219,14 @@ sub search_string {
     $self->log->debug("searching for: " . join("/",@needle_array));
 
     return sub {
-        my  ($haystack) = @_;
+        my $line = shift;
 
-        for my $line (split(/\n/,$haystack)) {
-            $self->log->debug("scanning: $line");
-            foreach my $needle (@needle_array) {
-                return 1 if ($line =~ /$needle/);
-            }
+        $self->log->debug("scanning: $line");
+
+        foreach my $needle (@needle_array) {
+            return 1 if ($line =~ /$needle/);
         }
-
+ 
         return 0;
     }
 }
@@ -205,7 +235,8 @@ sub search_string {
 # run an event loop
 #
 # options:
-#       timeout: number of seconds to wait
+#       timeout: number of seconds to wait for input after which the house 
+#                keeping tasks start
 sub run {
     my ($self,$actions, %options) = @_;
 
@@ -214,11 +245,6 @@ sub run {
     while(1) {   
         my $ret = $self->read_while(sub {
             my $line = shift;
-            chop($line);
-            $line =~ s{[\000-\037]\[(\d|;)+m}{}g;
-            $line =~ s{\r}{}g;
-
-            return 1 unless (length($line) && $line =~ /\S/);
 
             $self->log->debug("scanning: $line");
             $self->log->debug("raw: " . join(",",unpack("H*",$line)));
@@ -248,7 +274,10 @@ sub run {
         last if $options{timeout} && ! defined($ret);
     }
 
+    $self->state->update;
+
     $self->log->debug("exit run loop");
+
     1;
 }
 
@@ -277,6 +306,14 @@ sub find_action {
     }
 
     return undef;
+}
+
+sub clean_buffer {
+    $_ = $_[0];
+    chomp;
+    s{[\000-\037]\[(\d|;)+m}{}g;
+    s{\r}{}g;
+    $_;
 }
 
 1;

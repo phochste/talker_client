@@ -32,10 +32,10 @@ sub run {
     if ($r <= 20) {
 	   $self->talker->write_string($talk[rand(@talk)] . "\n");
     }
-    elsif ($r < 50) {
-       my @letters = ('a'..'z');
-       my $random_letter = $letters[int rand @letters];
-       $self->talker->write_string(".go $random_letter\n");
+    elsif ($r < 25) {
+       my @exists = @{$self->talker->state->{exits}};
+       my $random_room = $exists[int rand @exists];
+       $self->talker->write_string(".go $random_room\n");
     }
 }
 

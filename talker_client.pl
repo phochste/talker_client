@@ -24,6 +24,7 @@ my $config    = load_config();
 my $logger    = Log::Log4perl->get_logger('talker_client');
 my $script    = File::Basename::basename($0);
 my $SELF      = catfile($FindBin::Bin, $script);
+my $heartbeat = 60;
 
 $SIG{HUP} =  sub {
       $logger->warn("got SIGHUP");
@@ -33,12 +34,13 @@ $SIG{HUP} =  sub {
 my ($host,$port,$user,$password,$relogin,$background);
 
 GetOptions(
-    "host=s"     => \$host, 
-    "port=i"     => \$port , 
-    "user=s"     => \$user , 
-    "password=s" => \$password, 
-    "relogin"    => \$relogin,
-    "background" => \$background,
+    "host=s"      => \$host, 
+    "port=i"      => \$port , 
+    "user=s"      => \$user , 
+    "password=s"  => \$password, 
+    "relogin"     => \$relogin,
+    "background"  => \$background,
+    "heartbeat=i" => \$heartbeat,
 );
 
 my $talker    = shift;
@@ -69,6 +71,7 @@ else {
 
 sub run {
     my $x = Talker::Client->new(
+            name           => $talker,
             host           => $host     // $config->{talker}->{$talker}->{host},
             port           => $port     // $config->{talker}->{$talker}->{port},
             user           => $user     // $config->{talker}->{$talker}->{user},
@@ -82,11 +85,12 @@ sub run {
     while (1) {
         $logger->info("re-loading configuration");
         $config = load_config();
-        $x->run($config->{actions}, timeout => 60);
+        $x->run($config->{actions}, timeout => $heartbeat);
 
         my $action = Talker::Action::random_action->new(talker => $x);
-        $logger->info("..executing $action");
+        $logger->info("Talker::Action::random_action()");
         $action->run("");
+        $logger->info("state: " . $x->state);
     }
 
     $x->logout;
@@ -120,6 +124,7 @@ options:
     --password=...
     --relogin
     --background
+    --heartbeat=...
 
 EOF
     exit(1);

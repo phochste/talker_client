@@ -31,7 +31,7 @@ sub run {
     my ($self, $buffer) = @_;
 
     if ($buffer =~ /[0-9]{2,}/) {
-        sleep(1);
+        sleep(2);
         my $answer = int(rand(1000));
         $self->talker->write_string("$answer !\n");
 
@@ -44,7 +44,7 @@ sub run {
        my $right = $3;
        my $answer;
 
-       sleep(1);
+       sleep(2);
 
        eval "\$answer = $left $op $right";
 
@@ -62,7 +62,7 @@ sub run {
             $answer += 1 - int(rand(3));
             $self->talker->write_string("$answer ?\n");
 
-            sleep(1);
+            sleep(2);
             $self->talker->write_string($talk[rand(@talk2)] . "\n");
        }
     }
