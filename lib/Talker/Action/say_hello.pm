@@ -24,7 +24,7 @@ our @talk = (
         );
 
 sub run {
-   my ($self, $buffer) = @_;
+    my ($self, $buffer) = @_;
 
     if ($buffer =~ /^(\w+)/) {
        my $name = $1;

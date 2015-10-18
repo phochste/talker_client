@@ -1,14 +1,13 @@
 package Talker::Client;
 
 use Moo;
-use Catmandu;
-use Catmandu::Util qw(:is);
+use Module::Load;
 use IO::Socket;
 use IO::Select;
+use Time::HiRes;
 use POSIX;
 use Carp;
-
-with 'Catmandu::Logger';
+use Log::Any ();
 
 has host           => (is => 'ro', required => 1);
 has port           => (is => 'ro', required => 1);
@@ -17,10 +16,14 @@ has password       => (is => 'ro', required => 1);
 has name_regex     => (is => 'ro', required => 1);
 has password_regex => (is => 'ro', required => 1);
 
-has state          => (is => 'rw');
-
-has last_talk_time => (is => 'rw', default => sub { time; });
+has state    => (is => 'rw');
 has socket   => (is => 'lazy');
+has 'log'    => (is => 'lazy');
+ 
+sub _build_log {
+    my ($self) = @_;
+    Log::Any->get_logger(category => ref($self));
+}
 
 sub _build_socket {
     my ($self) = @_;
@@ -99,14 +102,23 @@ sub read_while {
     my $buf = '';
     my $ret;
 
-    $self->log->info("entering read_while loop");
+    $self->log->debug("entering read_while loop");
+
 
     while (1) {
+        my $now          = [Time::HiRes::gettimeofday];
         my ($read_ready) = $read_handles->can_read($timeout);
+        my $elapsed      = Time::HiRes::tv_interval($now);
 
-        unless (defined($read_ready) && $timeout) {
-            $self->log->info("timeout $timeout reached");
+        unless (defined($read_ready) && defined($timeout)) {
+            $timeout //= '0';
+            $self->log->debug("timeout reached");
             return undef;
+        }
+
+        if (defined($timeout)) {
+            $timeout -= $elapsed;
+            $self->log->debug("timeout set to: $timeout");
         }
 
         my $bytes_read   = sysread($self->socket,$buf,1024);
@@ -118,7 +130,7 @@ sub read_while {
             }
 
             if ($bytes_read > 0) {
-                $self->log->info("read " . length($buf) . " bytes");
+                $self->log->debug("read " . length($buf) . " bytes : $buf");
                 if (($ret = $func->($buf)) > 0) { return [$buf,$ret]; }
             }
         }
@@ -138,7 +150,7 @@ sub write_string {
     my $read_handles  = new IO::Select($self->socket);
     my $write_handles = new IO::Select($self->socket);
 
-    $self->last_talk_time(time);
+    $self->log->debug("entering write_string loop");
 
     while (1) {
         ($read_ready,$write_ready) =
@@ -149,12 +161,14 @@ sub write_string {
 
             if (defined($bytes_read)) {
                 if ($bytes_read == 0) {
+                    $self->log->info("connection closed");
                     die "Connection closed";
                 }
             }
         }
 
         foreach $sock (@$write_ready) {
+            $self->log->info("write " . length($string) . " bytes : $string");
             syswrite($self->socket,$string,length($string));
             return ;
         }
@@ -195,12 +209,14 @@ sub search_string {
 sub run {
     my ($self,$actions, %options) = @_;
 
-    $self->log->info("entering run loop");
+    $self->log->debug("entering run loop");
+
     while(1) {   
         my $ret = $self->read_while(sub {
             my $line = shift;
             chop($line);
-            $line =~ s{\033\[\w+}{}g;
+            $line =~ s{[\000-\037]\[(\d|;)+m}{}g;
+            $line =~ s{\r}{}g;
 
             return 1 unless (length($line) && $line =~ /\S/);
 
@@ -211,8 +227,9 @@ sub run {
 
             if (defined $action) {
                 eval {
-                    my $pkg = Catmandu::Util::require_package($action,'Talker::Action');
-                    $self->log->info("..executing $pkg");
+                    my $pkg = "Talker::Action::$action";
+                    load $pkg;
+                    $self->log->info("$pkg($line)");
                     my $act = $pkg->new(talker => $self);
                     my $ret = $act->run($line);
                 };
@@ -220,15 +237,18 @@ sub run {
                 if ($@) {
                     $self->log->error($@);
                 }
-            }
 
-            1;
+                return 1;
+            }
+            else {
+                return 0;
+            }
         }, $options{timeout});
 
         last if $options{timeout} && ! defined($ret);
     }
 
-    $self->log->info("exit run loop");
+    $self->log->debug("exit run loop");
     1;
 }
 
@@ -244,7 +264,7 @@ sub find_action {
         if ($line =~ /$regex/) {
             $self->log->debug("+ found match");
 
-            if (is_array_ref($action)) {
+            if (ref($action) eq 'ARRAY') {
                 return $self->find_action($action,$line);
             }
             else {
