@@ -1,0 +1,49 @@
+#!/bin/sh
+#
+# talker_client    Start/Stop the talker robots.
+#
+# chkconfig: 2345 90 60
+
+start() {
+    su ec2-user -c "cd /home/ec2-user/cbserver_1.0.0/local && ./talker_client --background --relogin cb > log/talker.cb.log 2>&1 "
+  #  su ec2-user -c "cd /home/ec2-user/cbserver_1.0.0/local && ./talker_client --background --relogin zodi > log/talker.zodi.log 2>& 1"
+    retval=$?
+    echo 
+    [ $retval -eq 0 ]
+}
+
+stop() {
+    ps -ef | grep "[t]alker_client" | awk {'print $2'} | xargs kill -9
+    retval=$?
+    echo
+    [ $retval -eq 0 ]
+}
+
+restart() {
+    stop
+    start
+}
+
+status() {
+   ps -ef | grep "[t]alker_client"
+}
+
+
+case "$1" in
+    start)
+        $1
+        ;;
+    stop)
+        $1
+        ;;
+    restart)
+        $1
+        ;;
+    status)
+        $1
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart}"
+        exit 2
+esac
+exit $?
