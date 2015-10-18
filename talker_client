@@ -5,8 +5,8 @@
 # chkconfig: 2345 90 60
 
 start() {
-    su ec2-user -c "cd /home/ec2-user/cbserver_1.0.0/local && ./talker_client --background --relogin cb > log/talker.cb.log 2>&1 "
-  #  su ec2-user -c "cd /home/ec2-user/cbserver_1.0.0/local && ./talker_client --background --relogin zodi > log/talker.zodi.log 2>& 1"
+    su ec2-user -c "cd /home/ec2-user/cbserver_1.0.0/local && ./talker_client.pl --background --relogin cb > log/talker.cb.log 2>&1 "
+    su ec2-user -c "cd /home/ec2-user/cbserver_1.0.0/local && ./talker_client.pl --background --relogin zodi > log/talker.zodi.log 2>& 1"
     retval=$?
     echo 
     [ $retval -eq 0 ]

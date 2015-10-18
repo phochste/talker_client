@@ -1,3 +1,4 @@
 catmandu.yml
 client-*
 log4perl.conf
+log/*
