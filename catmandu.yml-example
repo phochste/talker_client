@@ -1,0 +1,28 @@
+---
+talker:
+    cb:
+        host: 52.88.68.92
+        port: 1234
+    zodi:
+        host: 88.114.193.122
+        port: 5000
+
+login:
+    name_regex:
+        - "^Name"
+        - "^Login"
+        - "^Greetings"
+    password_regex:
+        - "^Password"
+        - "^Please (\\w+), enter a password"
+
+actions:
+   - "^Pushkin" : nothing
+   - "\\w+\\s+:\\s+[Yy][Ee][Ss]" : say_yes
+   - "\\w+\\s+:\\s+[Nn][Oo]" : say_no
+   - "\\s+orange" : say_orange
+   - "(WALKING|ENTERING)" : new_login
+   - "\\s+([Pp]ushkin|[Cc]at)":
+        - "(kick|kill|fuck|beats|punch|hit|spit|poke|bounce)" : say_angry
+        - "([Hh]i|[Hh]oi|[Hh]ello|[Gg]reeting|[Gg]ood[ ]?morning|[Gg]ood[ ]?day|[Gg]ood[ ]?afternoon|[Gg]ood[ ]?evening|[Oo]la)" : say_hello
+        - ".*" : name_react

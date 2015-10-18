@@ -1,0 +1,11 @@
+#log4perl.rootLogger=INFO,STDOUT
+
+log4perl.category.talker_client=INFO,STDOUT
+log4perl.category.Talker=INFO,STDOUT
+
+log4perl.appender.STDOUT=Log::Log4perl::Appender::Screen
+log4perl.appender.STDOUT.stderr=1
+log4perl.appender.STDOUT.utf8=1
+ 
+log4perl.appender.STDOUT.layout=PatternLayout
+log4perl.appender.STDOUT.layout.ConversionPattern=%d [%P] - %p %l time=%r : %m%n
