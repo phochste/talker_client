@@ -30,7 +30,9 @@ sub run {
     my $r = int(rand(100));
 
     if ($r <= 20) {
-	   $self->talker->write_string($talk[rand(@talk)] . "\n");
+       if ($self->talker->state->area_users && @{$self->talker->state->area_users} > 0) {
+	       $self->talker->write_string($talk[rand(@talk)] . "\n");
+       }
     }
     elsif ($r < 25) {
        my @exists = @{$self->talker->state->{exits}};

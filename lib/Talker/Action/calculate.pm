@@ -18,7 +18,7 @@ our @talk = (
 our @talk2 = (
         ".emote licks her paws",
         ".emote streches and walks away",
-        ".emote snors",
+        ".emote purrs",
         ".emote licks some beer from the floor",
         ".emote rolls over",
         ".emote sneezes",

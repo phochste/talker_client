@@ -29,4 +29,31 @@ sub update_exits {
     },10);
 }
 
+sub update_area_users {
+    my ($self) = @_;
+
+    $self->talker->state->area_users([]);
+
+    $self->log->debug("updating area_users");
+
+    $self->talker->write_string(".with\n");
+    $self->talker->read_while(sub {
+        my ($x,$buffer) = @_;
+
+        if ($buffer =~ /^You can see (.*)\./) {
+            my $match = $1;
+            $match =~ s{[\[\]\r\n]+}{};
+
+            $self->talker->state->area_users( [split(/\s*,\s*/,$match)] );
+
+            return 1;
+        }
+        elsif ($buffer =~ /^You appear/) {
+            return 0;
+        }
+
+        return 0;
+    },10);
+}
+
 1;
