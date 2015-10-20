@@ -17,16 +17,16 @@ use Log::Log4perl;
 
 my @argv      = @ARGV;
 
-Log::Any::Adapter->set('Log4perl');
-Log::Log4perl::init('./log4perl.conf');
-
 my $config    = load_config();
-my $logger    = Log::Log4perl->get_logger('talker_client');
 my $script    = File::Basename::basename($0);
 my $SELF      = catfile($FindBin::Bin, $script);
-my $heartbeat = 60;
+my $heartbeat = $config->{heartbeat} // 60;
 
-$SIG{HUP} =  sub {
+Log::Any::Adapter->set('Log4perl');
+Log::Log4perl::init_and_watch('./log4perl.conf',$heartbeat);
+my $logger    = Log::Log4perl->get_logger('talker_client');
+
+$SIG{HUP} = sub {
       $logger->warn("got SIGHUP");
       exec($SELF, @argv) || die "$0: couldn't restart $SELF: $!";
 };
@@ -70,6 +70,8 @@ else {
 }
 
 sub run {
+    $logger->info("creating new talker with heartbeat: $heartbeat");
+
     my $x = Talker::Client->new(
             name           => $talker,
             host           => $host     // $config->{talker}->{$talker}->{host},
