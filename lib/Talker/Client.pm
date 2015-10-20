@@ -8,6 +8,9 @@ use Time::HiRes;
 use POSIX;
 use Carp;
 use Log::Any ();
+use namespace::clean;
+
+with 'Talker::Factory';
 
 has name           => (is => 'ro', required => 1);
 has host           => (is => 'ro', required => 1);
@@ -52,22 +55,9 @@ sub _build_socket {
 sub _build_state {
     my ($self) = @_;
     my $name = $self->name;
-    my $state;
 
-    eval {
-        my $pkg = "Talker::State::$name";
-        load $pkg;
-        $self->log->info("$pkg");
-        $state = $pkg->new(talker => $self);
-    };
-
-    if ($@) {
-        $self->log->error($@);
-        my $pkg = "Talker::State::default";
-        load $pkg;
-        $self->log->info("$pkg");
-        $state = $pkg->new(talker => $self);
-    }
+    my $state = $self->factory("Talker::State",$name,talker => $self) //
+                $self->factory("Talker::State",'default',talker => $self);
 
     $state;
 }
@@ -252,18 +242,9 @@ sub run {
             my $action = $self->find_action($actions,$line);
 
             if (defined $action) {
-                eval {
-                    my $pkg = "Talker::Action::$action";
-                    load $pkg;
-                    $self->log->info("$pkg($line)");
-                    my $act = $pkg->new(talker => $self);
-                    my $ret = $act->run($line);
-                };
-
-                if ($@) {
-                    $self->log->error($@);
+                if (my $act = $self->factory("Talker::Action",$action, talker => $self)) {
+                    $act->run($line);
                 }
-
                 return 1;
             }
             else {

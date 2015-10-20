@@ -92,7 +92,7 @@ sub run {
         my $action = Talker::Action::random_action->new(talker => $x);
         $logger->info("Talker::Action::random_action()");
         $action->run("");
-        $logger->info("state: " . $x->state);
+        $logger->info("state: " . $x->state->as_string);
     }
 
     $x->logout;
@@ -131,4 +131,3 @@ options:
 EOF
     exit(1);
 }
-

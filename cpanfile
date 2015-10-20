@@ -7,4 +7,6 @@ requires 'IO::Socket', '0';
 requires 'File::Spec::Functions', '0';
 requires 'File::Spec', '0';
 requires 'Time::HiRes', '0';
+requires 'Module::Path', '0';
+requires 'Module::Load', '0';
 requires 'JSON', '0';

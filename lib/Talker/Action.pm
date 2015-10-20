@@ -2,6 +2,7 @@ package Talker::Action;
 
 use Moo::Role;
 use Log::Any;
+use namespace::clean;
 
 requires 'run';
 
