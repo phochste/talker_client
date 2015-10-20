@@ -25,6 +25,27 @@ sub update_exits {
     },10);
 }
 
+sub update_area {
+    my ($self) = @_;
+
+    my $area = $self->talker->state->area // "";
+    $self->talker->state->area($area);
+
+    $self->log->debug("updating area");
+
+    $self->talker->write_string(".go\n");
+    $self->talker->read_while(sub {
+        my $line = shift;
+
+        if ($line =~ /^go: you are allready at the (.*)/) {
+            $self->talker->state->area($1);
+            return 1;
+        }
+
+        return 0;
+    },10);
+}
+
 sub update_area_users {
     my ($self) = @_;
 

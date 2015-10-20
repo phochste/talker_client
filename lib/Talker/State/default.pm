@@ -11,6 +11,13 @@ sub update_exits {
     $self->talker->state->exits($exits);
 }
 
+sub update_area {
+	my ($self) = @_;
+
+    my $area = $self->talker->state->area // "";
+    $self->talker->state->area($area);
+}
+
 sub update_area_users {
 	my ($self) = @_;
 

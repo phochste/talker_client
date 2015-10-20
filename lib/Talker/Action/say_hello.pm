@@ -8,7 +8,7 @@ has talker => (is => 'ro', required => 1);
 
 our @talk = (
         "Mrrrauw :x ",
-        "Moew hello ",
+        "Meow hello ",
         "Iauw hi.. ",
         "Miaaw mo vint toch, ",
         "Prrrr hehehe, prrhello ",

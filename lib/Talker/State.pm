@@ -6,8 +6,10 @@ use JSON;
 
 requires 'update_exits';
 requires 'update_area_users';
+requires 'update_area';
 
 has 'exits'      => (is => 'rw');
+has 'area'       => (is => 'rw');
 has 'area_users' => (is => 'rw');
 
 has 'talker'     => (is => 'rw');;
@@ -26,6 +28,9 @@ sub update {
 
 	$self->log->debug("update_area_users");
 	$self->update_area_users();
+
+	$self->log->debug("update_area");
+	$self->update_area();
 }
 
 sub as_string {
@@ -33,6 +38,7 @@ sub as_string {
 
 	my $text = "";
 
+	$text .= "area: \"" . $self->area . "\"; ";
 	$text .= "exits: " . encode_json($self->exits) . "; ";
 	$text .= "area_users: " . encode_json($self->area_users) . "; ";
 

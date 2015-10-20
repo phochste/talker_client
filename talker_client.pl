@@ -20,10 +20,10 @@ my @argv      = @ARGV;
 my $config    = load_config();
 my $script    = File::Basename::basename($0);
 my $SELF      = catfile($FindBin::Bin, $script);
-my $heartbeat = $config->{heartbeat} // 60;
+my $heartbeat;
 
 Log::Any::Adapter->set('Log4perl');
-Log::Log4perl::init_and_watch('./log4perl.conf',$heartbeat);
+Log::Log4perl::init_and_watch('./log4perl.conf', current_heartbeat() );
 my $logger    = Log::Log4perl->get_logger('talker_client');
 
 $SIG{HUP} = sub {
@@ -87,7 +87,7 @@ sub run {
     while (1) {
         $logger->info("re-loading configuration");
         $config = load_config();
-        $x->run($config->{actions}, timeout => $heartbeat);
+        $x->run($config->{actions}, timeout => current_heartbeat() );
 
         my $action = Talker::Action::random_action->new(talker => $x);
         $logger->info("Talker::Action::random_action()");
@@ -96,6 +96,10 @@ sub run {
     }
 
     $x->logout;
+}
+
+sub current_heartbeat {
+    $heartbeat // $config->{'heartbeat'} // 60;    
 }
 
 sub background {

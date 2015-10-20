@@ -1,9 +1,8 @@
 package Talker::Factory;
 
 use Moo::Role;
-use Module::Load qw[ load ];
 use Module::Path qw[ module_path ];
-use Module::Runtime qw[ compose_module_name ];
+use Module::Runtime qw[ use_module compose_module_name ];
 use Log::Any;
 use namespace::clean;
 
@@ -20,13 +19,11 @@ sub factory {
         return undef;
     }
 
-    load $module;
-
     my $inst;
 
     $logger->debug("creating new $module");
     eval {
-        $inst = $module->new(@_);
+        $inst = use_module($module)->new(@_);
     };
     if ($@) {
         $logger->error("failed to create new $module instance");
