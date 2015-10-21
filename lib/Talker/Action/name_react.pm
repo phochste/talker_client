@@ -9,6 +9,7 @@ has talker => (is => 'ro', required => 1);
 our @talk = (
         "Meow...",
         "He he he",
+        "Brrrrrrrow.row.",
         "Prrrr mmmh",
         ".emote licks her paws",
         ".emote runs through the area",
@@ -28,6 +29,7 @@ our @talk = (
         "Iuaw lag ... hmmmrr..",
         "Mauw hehehe",
         "Prrrr?",
+        "mrow",
         ".emote licks her paws",
         ".emote streches and walks away",
         ".emote purrs",

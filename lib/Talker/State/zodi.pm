@@ -16,7 +16,7 @@ sub update_exits {
     $self->talker->read_while(sub {
         my ($x,$buffer) = @_;
 
-        if ($buffer =~ /^From .* you can go to the ([^\.]+)/) {
+        if ($buffer =~ /^From .* you can .* to the ([^\.]+)/) {
             my $match = $1;
             $match =~ s{[\[\]\r\n]+}{};
 
@@ -41,7 +41,7 @@ sub update_area {
     $self->talker->read_while(sub {
         my $line = shift;
 
-        if ($line =~ /^From (.*) you can go to/) {
+        if ($line =~ /^From (.*) you can/) {
             $self->talker->state->area($1);
             return 1;
         }

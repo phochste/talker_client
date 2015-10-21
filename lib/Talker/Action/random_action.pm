@@ -7,7 +7,7 @@ with 'Talker::Action';
 has talker => (is => 'ro', required => 1);
 
 our @talk = (
-        ".emote licks her paws",
+        ".emote licks his paws",
         ".emote stretches and walks away",
         ".emote purrs",
         ".emote licks some beer from the floor",
@@ -20,9 +20,13 @@ our @talk = (
         ".emote winks",
         ".emote snickers",
         ".emote nods",
-        ".emote flattens her ears",
-        ".emote look at you",
+        ".emote flattens his ears",
+        ".emote looks at you",
         ".emote shrugs",
+        ".emote sighs",
+        ".emote spins around",
+        ".emote coughs up a hairball",
+        "PrrrRRRRrrrrr",
 );
 
 sub run {

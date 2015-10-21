@@ -16,7 +16,11 @@ our @talk = (
         ".shout ai ai ai ai :X(",
         ".semote bites and claws around her",
         "Iaauww !!Grrrrrrrrrrrrrr!!  :X(",
-        "Prrrrrrrrrrrrrrt :XP''' ''"
+        "Prrrrrrrrrrrrrrt :XP''' ''",
+        "hisssssssssssss",
+        "YOWwwww..grrrow",
+        "Wrowwwww",
+        "Hithhhhh",
         );
 
 sub run {
