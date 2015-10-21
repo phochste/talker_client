@@ -8,7 +8,7 @@ has talker => (is => 'ro', required => 1);
 
 our @talk = (
         ".emote licks her paws",
-        ".emote streches and walks away",
+        ".emote stretches and walks away",
         ".emote purrs",
         ".emote licks some beer from the floor",
         ".emote rolls over",
@@ -20,6 +20,9 @@ our @talk = (
         ".emote winks",
         ".emote snickers",
         ".emote nods",
+        ".emote flattens her ears",
+        ".emote look at you",
+        ".emote shrugs",
 );
 
 sub run {

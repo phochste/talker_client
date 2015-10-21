@@ -14,6 +14,8 @@ our @talk = (
         "Prrrr ",
         "Prr mmrreow ",
         ".emote points at the sign ",
+        ".think",
+        ".sing Meow meeeeow meow ..",
         );
 
 sub run {
